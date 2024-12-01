@@ -2,6 +2,8 @@ const express = require('express');
 const app = express();
 app.use(express.json()); // para receber informações do insominia no formato JSON
 
+const Produto = require('./models/Produtos')
+
 app.get("/", async (req, res)=> {
     res.send("Bem vindo! ao projeto")
 });
