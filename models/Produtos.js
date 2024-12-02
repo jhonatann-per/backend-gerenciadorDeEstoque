@@ -20,6 +20,6 @@ const Produto = db.define('produtos', {
     }
 });
 //CRIAR A TABELA
-Produto.sync();
+// Produto.sync();
 
 module.exports = Produto;
