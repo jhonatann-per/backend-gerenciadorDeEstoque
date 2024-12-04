@@ -7,7 +7,7 @@ const sequelize = new Sequelize('gerenciador', 'root', 'Zed152zed.',{
 
 sequelize.authenticate()
 .then(()=>{
-    console.log("Conexão Realizada Com Sucesso!")
+    console.log("Conexão Com O Banco De Dados Realizada Com Sucesso!")
 }).catch(()=>{
     console.log("Error: Falha De Conexão Com O Banco De Dados!")
 })

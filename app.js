@@ -1,8 +1,17 @@
 const express = require('express');
 const app = express();
-app.use(express.json()); // para receber informações do insominia no formato JSON
-
+const cors = require('cors')
 const Produto = require('./models/Produtos')
+
+app.use(express.json());
+app.use((req, res, next) =>{
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE" );
+    res.header("Access-Control-Allow-Headers", "X-PINGOTHER, Content-Type, Authorization" );
+    app.use(cors());
+    next();
+});
+
 
 app.get("/", async (req, res)=> {
     res.send("Bem vindo! ao projeto")
@@ -26,14 +35,17 @@ app.post("/cadastrar", async (req, res) => {
 app.get("/listar", async (req, res) => {
     try {
         const produtos = await Produto.findAll({
-            attributes: ['nome', 'preco_venda', 'quantidade' ],
-            order: [ ['nome', 'ASC'], ['preco_venda', 'ASC'], ['quantidade', 'ASC'] ]
+            attributes: ['id', 'nome', 'preco_venda', 'quantidade'],
+            order: [
+                ['id', 'ASC']
+            ]
         });
         res.status(201).json(produtos);
-    } catch {
+    } catch (error) {
         res.status(400).json({ mensagem: "Erro: Lista não encontrada" });
     }
 });
+
 
 app.get("/visualizar/:id", async (req, res) => {
     try {
