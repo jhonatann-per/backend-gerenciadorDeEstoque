@@ -12,6 +12,9 @@ const Produto = db.define('produtos', {
         type: Sequelize.STRING,
         allowNull: false
     },
+    preco_compra: {
+        type: Sequelize.DOUBLE,
+    },
     preco_venda: {
         type: Sequelize.DOUBLE,
     },
@@ -19,7 +22,7 @@ const Produto = db.define('produtos', {
         type: Sequelize.INTEGER
     }
 });
-//CRIAR A TABELA
-// Produto.sync();
+//ATUALIZA E CRIA
+// Produto.sync({alter: true});
 
 module.exports = Produto;

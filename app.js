@@ -19,9 +19,9 @@ app.get("/", async (req, res)=> {
 
 app.post("/cadastrar", async (req, res) => {
     try {
-        const { nome, preco_venda, quantidade } = req.body;
+        const { nome, preco_venda, quantidade, preco_compra, } = req.body;
         const novoProduto = await Produto.create({
-            nome, preco_venda, quantidade
+            nome, preco_venda, preco_compra, quantidade
         });
         res.status(200).json({
             mensagem: "Produto cadastrado com sucesso!",
@@ -35,7 +35,7 @@ app.post("/cadastrar", async (req, res) => {
 app.get("/listar", async (req, res) => {
     try {
         const produtos = await Produto.findAll({
-            attributes: ['id', 'nome', 'preco_venda', 'quantidade'],
+            attributes: ['id', 'nome', 'preco_compra', 'preco_venda', 'quantidade'],
             order: [
                 ['id', 'ASC']
             ]
@@ -47,10 +47,27 @@ app.get("/listar", async (req, res) => {
 });
 
 
+// Rota para buscar um produto específico
+app.get('/produto/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const produto = await Produto.findByPk(id); // Usando Sequelize para buscar pelo ID
+
+        if (!produto) {
+            return res.status(404).json({ mensagem: "Produto não encontrado!" });
+        }
+
+        res.status(200).json(produto);
+    } catch (error) {
+        res.status(500).json({ mensagem: "Erro ao buscar produto!" });
+    }
+});
+
+
 app.get("/visualizar/:id", async (req, res) => {
     try {
         const produto = await Produto.findByPk(req.params.id, {
-            attributes: ['nome', 'preco_venda', 'quantidade']
+            attributes: ['nome', 'preco_venda', 'preco_compra', 'quantidade']
         });
         if (produto) {
             res.status(200).json(produto);
@@ -72,7 +89,6 @@ app.put("/editar-produto", async (req, res) => {
         return res.status(404).json({ erro: true, mensagem: "Erro: Produto não encontrado ou não editado" });
     }
 });
-
 
 app.delete("/deletar-produto/:id", async (req, res) => {
     const { id } = req.params;
