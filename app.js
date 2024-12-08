@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors')
 const Produto = require('./models/Produtos')
+const Usuario = require('./models/usuario')
 
 app.use(express.json());
 app.use((req, res, next) =>{
@@ -84,9 +85,13 @@ app.put("/editar-produto", async (req, res) => {
 
     const [updated] = await Produto.update(req.body, { where: { id } });
     if (updated) {
-        return res.status(200).json({ erro: false, mensagem: "Produto editado com sucesso!" });
+        return res.status(200).json({ 
+            erro: false, 
+            mensagem: "Produto editado com sucesso!" });
     } else {
-        return res.status(404).json({ erro: true, mensagem: "Erro: Produto não encontrado ou não editado" });
+        return res.status(404).json({ 
+            erro: true, 
+            mensagem: "Erro: Produto não encontrado ou não editado" });
     }
 });
 
@@ -96,12 +101,52 @@ app.delete("/deletar-produto/:id", async (req, res) => {
     const resultado = await Produto.destroy({ where: { id } });
 
     if (resultado) {
-        return res.status(200).json({ erro: false, mensagem: "Produto apagado com sucesso!" });
+        return res.status(200).json({ 
+            erro: false, 
+            mensagem: "Produto apagado com sucesso!" });
     } else {
-        return res.status(404).json({ erro: true, mensagem: "Erro: Produto não encontrado ou não apagado" });
+        return res.status(404).json({ 
+            erro: true, 
+            mensagem: "Erro: Produto não encontrado ou não apagado" });
     }
 });
 
+
+app.put("/editar-usuario", async (req, res) => { 
+    const {id} = req.body;
+    const [update] = await Usuario.update(req.body, { where: { id } });
+    if(update) {
+        return res.status(200).json({
+            erro: false,
+            mensagem: "Produto Editado com Sucesso!"
+        })
+    } else{
+        return res.status(404).json({
+            erro: false,
+            mensagem: "Erro: Não Foi Possível Atualizar o Usuario!"
+        })
+    }
+})
+
+app.post("/cadastrar-usuario", async ( req, res ) =>{
+    try{
+        const { nome, email, senha } = req.body;
+        const novoUsuario = await Usuario.create({ 
+            nome, email, senha
+        });
+        res.status(200).json({
+            erro: false, 
+            mensagem: "Usuários Cadastrado com Sucesso!",
+            usuario: novoUsuario
+        })
+    
+    } catch(error) {
+        res.status(404).json({
+            erro: true,
+            mensagem: "Erro ao cadastrar Usuário: " + error.mensagem
+        })
+    }
+})
 
 
 app.listen(8080, () =>{

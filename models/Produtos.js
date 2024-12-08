@@ -1,8 +1,8 @@
-const Sequelize = require('sequelize')
-const db = require('./db')
+const Sequelize = require('sequelize');
+const db = require('./db');
 
 const Produto = db.define('produtos', {
-    id:{
+    id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         allowNull: false,
@@ -18,11 +18,12 @@ const Produto = db.define('produtos', {
     preco_venda: {
         type: Sequelize.DOUBLE,
     },
-    quantidade:{
+    quantidade: {
         type: Sequelize.INTEGER
     }
 });
-//ATUALIZA E CRIA
-// Produto.sync({alter: true});
+
+
+// Produto.sync();
 
 module.exports = Produto;
