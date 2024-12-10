@@ -18,6 +18,9 @@ app.get("/", async (req, res)=> {
     res.send("Bem vindo! ao projeto")
 });
 
+
+// CRUD DE PRODUTOS
+
 app.post("/cadastrar", async (req, res) => {
     try {
         const { nome, preco_venda, quantidade, preco_compra, } = req.body;
@@ -43,27 +46,11 @@ app.get("/listar", async (req, res) => {
         });
         res.status(201).json(produtos);
     } catch (error) {
-        res.status(400).json({ mensagem: "Erro: Lista não encontrada" });
+        res.status(400).json({
+             mensagem: "Erro: Lista não encontrada" 
+        });
     }
 });
-
-
-// Rota para buscar um produto específico
-app.get('/produto/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        const produto = await Produto.findByPk(id); // Usando Sequelize para buscar pelo ID
-
-        if (!produto) {
-            return res.status(404).json({ mensagem: "Produto não encontrado!" });
-        }
-
-        res.status(200).json(produto);
-    } catch (error) {
-        res.status(500).json({ mensagem: "Erro ao buscar produto!" });
-    }
-});
-
 
 app.get("/visualizar/:id", async (req, res) => {
     try {
@@ -73,10 +60,12 @@ app.get("/visualizar/:id", async (req, res) => {
         if (produto) {
             res.status(200).json(produto);
         } else {
-            res.status(400).json({ mensagem: "Produto não encontrado" });
+            res.status(400).json({ 
+            mensagem: "Produto não encontrado" });
         }
     } catch (error) {
-        res.status(405).json({ mensagem: "Erro: Não foi possível visualizar o produto" });
+        res.status(405).json({ 
+            mensagem: "Erro: Não foi possível visualizar o produto" });
     }
 });
 
@@ -112,21 +101,10 @@ app.delete("/deletar-produto/:id", async (req, res) => {
 });
 
 
-app.put("/editar-usuario", async (req, res) => { 
-    const {id} = req.body;
-    const [update] = await Usuario.update(req.body, { where: { id } });
-    if(update) {
-        return res.status(200).json({
-            erro: false,
-            mensagem: "Produto Editado com Sucesso!"
-        })
-    } else{
-        return res.status(404).json({
-            erro: false,
-            mensagem: "Erro: Não Foi Possível Atualizar o Usuario!"
-        })
-    }
-})
+
+
+
+// CRUD DE USUÁRIOS
 
 app.post("/cadastrar-usuario", async ( req, res ) =>{
     try{
@@ -146,7 +124,85 @@ app.post("/cadastrar-usuario", async ( req, res ) =>{
             mensagem: "Erro ao cadastrar Usuário: " + error.mensagem
         })
     }
+});
+
+app.put("/editar-usuario", async (req, res) => { 
+    const {id} = req.body;
+    const [update] = await Usuario.update(req.body, { where: { id } });
+    if(update) {
+        return res.status(200).json({
+            erro: false,
+            mensagem: "Produto Editado com Sucesso!"
+        })
+    } else{
+        return res.status(404).json({
+            erro: false,
+            mensagem: "Erro: Não Foi Possível Atualizar o Usuario!"
+        })
+    }
+});
+
+app.delete("/deletar-usuario/:id", async (req, res) => {
+    const { id } = req.params;
+    const apagarUser = await Usuario.destroy({ where: { id } });
+    
+    if (apagarUser) {
+        res.status(200).json({
+            error: false,
+            mensagem: "Usuário apagado com sucesso!"
+        });
+    } else {
+        res.status(400).json({
+            error: true,
+            mensagem: "Erro: Usuário não foi apagado!"
+        });
+    }
+});
+
+app.get("/listar-usuarios", async (req,res) =>{
+    try{
+        const usuarios = await Usuario.findAll({
+            attributes: ['id', 'nome', 'email', 'data_criacao'],
+            order: [
+                ['id', 'ASC']
+            ]
+        
+        })
+        res.status(200).json(usuarios);
+    } catch(error){
+        res.status(404).json({
+            error: true,
+            mensagem: "Error: Usuário não encontrado!"
+        })
+    }
+        
+});
+
+app.get("/visualizar-usuario/:id", async (req, res) =>{
+    try{
+        const usuario = await Usuario.findByPk(req.params.id, { 
+            attributes: ['id', 'nome', 'email', 'data_criacao']
+             
+        });
+        if(usuario){
+            res.status(200).json({
+                error: false,
+                usuario: usuario
+            })
+        } else{
+            res.status(404).json({
+                error: true,
+                mensagem: "Erro: Usuário não encontrado."
+            })
+        }
+    } catch{
+        res.status(500).json({
+            error: true,
+            mensagem: "Verifique a conexão com o servidor!"
+        })
+    }
 })
+
 
 
 app.listen(8080, () =>{
