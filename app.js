@@ -1,8 +1,10 @@
 const express = require('express');
 const app = express();
 const cors = require('cors')
+const bcrypt = require('bcryptjs'); 
 const Produto = require('./models/Produtos')
 const Usuario = require('./models/usuario')
+const jwt = require('jsonwebtoken')
 
 app.use(express.json());
 app.use((req, res, next) =>{
@@ -106,41 +108,68 @@ app.delete("/deletar-produto/:id", async (req, res) => {
 
 // CRUD DE USUÁRIOS
 
-app.post("/cadastrar-usuario", async ( req, res ) =>{
-    try{
-        const { nome, email, senha } = req.body;
-        const novoUsuario = await Usuario.create({ 
-            nome, email, senha
-        });
-        res.status(200).json({
-            erro: false, 
-            mensagem: "Usuários Cadastrado com Sucesso!",
-            usuario: novoUsuario
-        })
-    
-    } catch(error) {
-        res.status(404).json({
+app.post("/cadastrar-usuario", async (req, res) => {
+    const { nome, email, senha } = req.body;
+
+    if (!nome || !email || !senha) {
+        return res.status(400).json({
             erro: true,
-            mensagem: "Erro ao cadastrar Usuário: " + error.mensagem
-        })
+            mensagem: "Erro: Todos os campos são obrigatórios!"
+        });
+    }
+
+    try {
+        const salt = await bcrypt.genSalt(10);
+        const senhaCriptografada = await bcrypt.hash(senha, salt);
+
+        const novoUsuario = await Usuario.create({ 
+            nome, 
+            email, 
+            senha: senhaCriptografada 
+        });
+
+        res.status(200).json({
+            erro: false,
+            mensagem: "Usuário cadastrado com sucesso!",
+            usuario: novoUsuario
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            erro: true,
+            mensagem: "Erro ao cadastrar usuário: " + error.message
+        });
     }
 });
 
+
 app.put("/editar-usuario", async (req, res) => { 
-    const {id} = req.body;
-    const [update] = await Usuario.update(req.body, { where: { id } });
-    if(update) {
-        return res.status(200).json({
-            erro: false,
-            mensagem: "Produto Editado com Sucesso!"
-        })
-    } else{
-        return res.status(404).json({
-            erro: false,
-            mensagem: "Erro: Não Foi Possível Atualizar o Usuario!"
-        })
+    const { id } = req.body; 
+    const dados = req.body;
+    
+    dados.senha = await bcrypt.hash(String(dados.senha), 8);
+
+    try {
+        const [update] = await Usuario.update(dados, { where: { id } });
+        if (update) {
+            return res.status(200).json({
+                erro: false,
+                mensagem: "Usuário editado com sucesso!"
+            });
+        } else {
+            return res.status(404).json({
+                erro: true,
+                mensagem: "Erro: Não foi possível atualizar o usuário!"
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            erro: true,
+            mensagem: "Erro: Não foi possível atualizar o usuário! " + error.message
+        });
     }
 });
+
 
 app.delete("/deletar-usuario/:id", async (req, res) => {
     const { id } = req.params;
@@ -159,49 +188,80 @@ app.delete("/deletar-usuario/:id", async (req, res) => {
     }
 });
 
-app.get("/listar-usuarios", async (req,res) =>{
-    try{
+app.get("/listar-usuarios", async (req, res) => {
+    try {
         const usuarios = await Usuario.findAll({
             attributes: ['id', 'nome', 'email', 'data_criacao'],
             order: [
                 ['id', 'ASC']
             ]
-        
-        })
+        });
         res.status(200).json(usuarios);
-    } catch(error){
-        res.status(404).json({
+    } catch (error) {
+        res.status(500).json({
             error: true,
-            mensagem: "Error: Usuário não encontrado!"
-        })
+            mensagem: "Erro: Usuários não encontrados! " + error.message
+        });
     }
-        
 });
 
-app.get("/visualizar-usuario/:id", async (req, res) =>{
-    try{
-        const usuario = await Usuario.findByPk(req.params.id, { 
+
+app.get("/visualizar-usuario/:id", async (req, res) => {
+    try {
+        const usuario = await Usuario.findByPk(req.params.id, {
             attributes: ['id', 'nome', 'email', 'data_criacao']
-             
         });
-        if(usuario){
+        if (usuario) {
             res.status(200).json({
                 error: false,
                 usuario: usuario
-            })
-        } else{
+            });
+        } else {
             res.status(404).json({
                 error: true,
                 mensagem: "Erro: Usuário não encontrado."
-            })
+            });
         }
-    } catch{
+    } catch (error) {
         res.status(500).json({
             error: true,
-            mensagem: "Verifique a conexão com o servidor!"
-        })
+            mensagem: "Verifique a conexão com o servidor! " + error.message
+        });
     }
-})
+});
+
+// ROTA DE LOGIN
+
+app.post('/login', async (req, res) => {
+    const {email, senha} = req.body;
+    const user = await Usuario.findOne({
+        attributes: ['id', 'email', 'senha'],
+        where:{ email }
+    });
+
+    if(!user){
+        return res.status(400).json({
+            erro: true,
+            mensagem: "Erro: Email ou senha invalido!"
+        })
+    };
+
+    if(!(await bcrypt.compare(req.body.senha, user.senha))) {
+        return res.status(401).json({
+            erro: true,
+            mensagem: "Erro: Verifique sua senha!"
+        })
+    };
+
+    const token = jwt.sign({id: user.id}, "8632edbe06e0f5c0809e6eadc7dd1247")
+
+    return res.status(200).json({
+        erro: false,
+        mensagem: "login bem sucedido!",
+        token: token
+    })
+
+});
 
 
 
