@@ -5,6 +5,9 @@ const bcrypt = require('bcryptjs');
 const Produto = require('./models/Produtos')
 const Usuario = require('./models/usuario')
 const jwt = require('jsonwebtoken')
+const {eAdmin} = require('./middlewares/auth.js')
+const secretKey = '8632edbe06e0f5c0809e6eadc7dd1247';
+
 
 app.use(express.json());
 app.use((req, res, next) =>{
@@ -21,9 +24,11 @@ app.get("/", async (req, res)=> {
 });
 
 
+
+
 // CRUD DE PRODUTOS
 
-app.post("/cadastrar", async (req, res) => {
+app.post("/cadastrar", eAdmin, async (req, res) => {
     try {
         const { nome, preco_venda, quantidade, preco_compra, } = req.body;
         const novoProduto = await Produto.create({
@@ -38,7 +43,7 @@ app.post("/cadastrar", async (req, res) => {
     }
 });
 
-app.get("/listar", async (req, res) => {
+app.get("/listar", eAdmin, async (req, res) => {
     try {
         const produtos = await Produto.findAll({
             attributes: ['id', 'nome', 'preco_compra', 'preco_venda', 'quantidade'],
@@ -46,7 +51,11 @@ app.get("/listar", async (req, res) => {
                 ['id', 'ASC']
             ]
         });
-        res.status(201).json(produtos);
+
+        res.status(200).json({
+            userId: req.userId, 
+            produtos: produtos
+        });
     } catch (error) {
         res.status(400).json({
              mensagem: "Erro: Lista não encontrada" 
@@ -54,7 +63,7 @@ app.get("/listar", async (req, res) => {
     }
 });
 
-app.get("/visualizar/:id", async (req, res) => {
+app.get("/visualizar/:id", eAdmin, async (req, res) => {
     try {
         const produto = await Produto.findByPk(req.params.id, {
             attributes: ['nome', 'preco_venda', 'preco_compra', 'quantidade']
@@ -71,7 +80,7 @@ app.get("/visualizar/:id", async (req, res) => {
     }
 });
 
-app.put("/editar-produto", async (req, res) => {
+app.put("/editar-produto", eAdmin, async (req, res) => {
     const { id } = req.body;
 
     const [updated] = await Produto.update(req.body, { where: { id } });
@@ -86,7 +95,7 @@ app.put("/editar-produto", async (req, res) => {
     }
 });
 
-app.delete("/deletar-produto/:id", async (req, res) => {
+app.delete("/deletar-produto/:id", eAdmin, async (req, res) => {
     const { id } = req.params;
 
     const resultado = await Produto.destroy({ where: { id } });
@@ -101,8 +110,6 @@ app.delete("/deletar-produto/:id", async (req, res) => {
             mensagem: "Erro: Produto não encontrado ou não apagado" });
     }
 });
-
-
 
 
 
@@ -142,8 +149,7 @@ app.post("/cadastrar-usuario", async (req, res) => {
     }
 });
 
-
-app.put("/editar-usuario", async (req, res) => { 
+app.put("/editar-usuario", eAdmin, async (req, res) => { 
     const { id } = req.body; 
     const dados = req.body;
     
@@ -170,8 +176,7 @@ app.put("/editar-usuario", async (req, res) => {
     }
 });
 
-
-app.delete("/deletar-usuario/:id", async (req, res) => {
+app.delete("/deletar-usuario/:id", eAdmin, async (req, res) => {
     const { id } = req.params;
     const apagarUser = await Usuario.destroy({ where: { id } });
     
@@ -188,7 +193,7 @@ app.delete("/deletar-usuario/:id", async (req, res) => {
     }
 });
 
-app.get("/listar-usuarios", async (req, res) => {
+app.get("/listar-usuarios", eAdmin, async (req, res) => {
     try {
         const usuarios = await Usuario.findAll({
             attributes: ['id', 'nome', 'email', 'data_criacao'],
@@ -205,8 +210,7 @@ app.get("/listar-usuarios", async (req, res) => {
     }
 });
 
-
-app.get("/visualizar-usuario/:id", async (req, res) => {
+app.get("/visualizar-usuario/:id", eAdmin, async (req, res) => {
     try {
         const usuario = await Usuario.findByPk(req.params.id, {
             attributes: ['id', 'nome', 'email', 'data_criacao']
@@ -230,6 +234,8 @@ app.get("/visualizar-usuario/:id", async (req, res) => {
     }
 });
 
+
+
 // ROTA DE LOGIN
 
 app.post('/login', async (req, res) => {
@@ -242,18 +248,20 @@ app.post('/login', async (req, res) => {
     if(!user){
         return res.status(400).json({
             erro: true,
-            mensagem: "Erro: Email ou senha invalido!"
+            mensagem: "Erro: Email ou senha invalida!"
         })
     };
 
     if(!(await bcrypt.compare(req.body.senha, user.senha))) {
         return res.status(401).json({
             erro: true,
-            mensagem: "Erro: Verifique sua senha!"
+            mensagem: "Erro: Email ou senha invalida!"
         })
     };
 
-    const token = jwt.sign({id: user.id}, "8632edbe06e0f5c0809e6eadc7dd1247")
+    const token = jwt.sign({id: user.id}, secretKey, {
+        expiresIn: '7d'
+    })
 
     return res.status(200).json({
         erro: false,
@@ -262,7 +270,6 @@ app.post('/login', async (req, res) => {
     })
 
 });
-
 
 
 app.listen(8080, () =>{
