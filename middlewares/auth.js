@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const {promisify} = require('util')
-const secretKey = '8632edbe06e0f5c0809e6eadc7dd1247';
+require('dotenv').config();
 
 module.exports = {
     eAdmin: async (req, res, next) => {
@@ -23,7 +23,7 @@ module.exports = {
         }
     
         try {
-            const decoded = await promisify(jwt.verify)(token, secretKey);
+            const decoded = await promisify(jwt.verify)(token, process.env.SECRET_KEY);
             req.userId = decoded.id;
             next();
         } catch (error) {

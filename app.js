@@ -6,7 +6,7 @@ const Produto = require('./models/Produtos')
 const Usuario = require('./models/usuario')
 const jwt = require('jsonwebtoken')
 const {eAdmin} = require('./middlewares/auth.js')
-const secretKey = '8632edbe06e0f5c0809e6eadc7dd1247';
+require('dotenv').config();
 
 
 app.use(express.json());
@@ -259,7 +259,7 @@ app.post('/login', async (req, res) => {
         })
     };
 
-    const token = jwt.sign({id: user.id}, secretKey, {
+    const token = jwt.sign({id: user.id}, process.env.SECRET_KEY, {
         expiresIn: '7d'
     })
 

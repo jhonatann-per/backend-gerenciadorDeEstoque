@@ -1,15 +1,21 @@
 const { Sequelize } = require('sequelize');
+require('dotenv').config();
 
-const sequelize = new Sequelize('gerenciador', 'root', 'Zed152zed.',{
-    host: 'localhost',
+const sequelize = new Sequelize(
+    process.env.DB_NAME, 
+    process.env.DB_USER, 
+    process.env.DB_PASS, 
+    {
+    host: process.env.DB_HOST,
     dialect: 'mysql'
 });
 
 sequelize.authenticate()
-.then(()=>{
-    console.log("Conexão Com O Banco De Dados Realizada Com Sucesso!")
-}).catch(()=>{
-    console.log("Error: Falha De Conexão Com O Banco De Dados!")
-})
+.then(() => {
+    console.log("Conexão com o banco de dados realizada com sucesso!");
+}).catch((error) => {
+    console.log("Erro: Falha de conexão com o banco de dados!");
+    console.error(error);
+});
 
 module.exports = sequelize;
