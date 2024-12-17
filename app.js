@@ -239,44 +239,45 @@ app.get("/visualizar-usuario/:id", eAdmin, async (req, res) => {
 // ROTA DE LOGIN
 
 app.post('/login', async (req, res) => {
-    const {email, senha} = req.body;
+    const { email, senha } = req.body;
     const user = await Usuario.findOne({
         attributes: ['id', 'email', 'senha'],
-        where:{ email }
+        where: { email }
     });
 
-    if(!user){
+    if (!user) {
         return res.status(400).json({
             erro: true,
-            mensagem: "Erro: Email ou senha invalida!"
-        })
-    };
+            mensagem: "Erro: Email ou senha inválida!"
+        });
+    }
 
-    if(!(await bcrypt.compare(req.body.senha, user.senha))) {
+    if (!(await bcrypt.compare(senha, user.senha))) {
         return res.status(401).json({
             erro: true,
-            mensagem: "Erro: Email ou senha invalida!"
-        })
-    };
+            mensagem: "Erro: Email ou senha inválida!"
+        });
+    }
 
-    const token = jwt.sign({id: user.id}, process.env.SECRET_KEY, {
+    const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, {
         expiresIn: '7d'
-    })
+    });
 
     return res.status(200).json({
         erro: false,
-        mensagem: "login bem sucedido!",
+        mensagem: "Login bem-sucedido!",
         token: token
-    })
-
+    });
 });
+
 
 // ROTA DE AUTENTICAÇÃO DE TOKEN
 app.get("/val-token", eAdmin, async (req, res) => {
     try {
-        const user = await User.findByPk(req.userId, { attributes: 
-            ['id', 'name', 'email'] });
-        
+        const user = await Usuario.findByPk(req.userId, {
+            attributes: ['id', 'email']
+        });
+
         if (!user) {
             return res.status(404).json({
                 erro: true,
@@ -296,6 +297,7 @@ app.get("/val-token", eAdmin, async (req, res) => {
         });
     }
 });
+
 
 
 app.listen(8080, () =>{
