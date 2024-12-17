@@ -271,6 +271,32 @@ app.post('/login', async (req, res) => {
 
 });
 
+// ROTA DE AUTENTICAÇÃO DE TOKEN
+app.get("/val-token", eAdmin, async (req, res) => {
+    try {
+        const user = await User.findByPk(req.userId, { attributes: 
+            ['id', 'name', 'email'] });
+        
+        if (!user) {
+            return res.status(404).json({
+                erro: true,
+                mensagem: "Usuário não encontrado!"
+            });
+        }
+
+        return res.status(200).json({
+            erro: false,
+            user
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            erro: true,
+            mensagem: "Erro ao validar o token!"
+        });
+    }
+});
+
 
 app.listen(8080, () =>{
     console.log("servidor iniciado na porta: http://localhost:8080")
